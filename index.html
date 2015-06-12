@@ -13,39 +13,59 @@ jQuery(document).ready(function($) {
     variants: {  
       text1: {
         activate: function() {
-          jQuery('h1').text('Subscribe to our newsletter');
+          $('h1').text('Subscribe to our newsletter');
         }
       },
       text2: {
         activate: function() {
-          jQuery('h1').text('Join us and move Europe!');
+          $('h1').text('Join us and move Europe!');
         }
       }
     },
   });
 
   // creating a goal
-  var h1_clicked_goal = new AlephBet.Goal('h1 header clicked');
+  var clicked_goal = new AlephBet.Goal('button clicked');
   
-  jQuery('h1').click(function() {
+  jQuery('button').click(function() {
     // The chosen variant will be tied to the goal automatically
-    console.log('clicked h1');
-    h1_clicked_goal.complete();
+    clicked_goal.complete();
   });
   
   // adding experiment to the goal
-  h1_clicked_goal.add_experiment(h1_experiment);
+  clicked_goal.add_experiment(h1_experiment);
 
 });
 </script>
 </head>
 <body>
 <h1>Subscribe to our newsletter (default)</h1>
-<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum vel lorem laoreet, elementum dolor at, posuere nibh. Sed quis malesuada risus. Donec quis dui quis mi fringilla feugiat vitae vitae felis. Sed eros magna, interdum ac augue at, viverra venenatis metus. Nunc blandit libero vitae libero facilisis pellentesque. Integer vitae augue quis purus ultrices posuere ut ac lectus. Proin augue sapien, tempus non tincidunt ac, rhoncus ut ex. Maecenas eu eros leo. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.</p>
+<p> This test offers to different texts for the title (above). The visitors get either:
+<ul> 
+  <li>Subscribe to our newsletter </li>
+  <li>Join us and move europe</li>
+</ul>
+Which one are you seeing? We are checking as well if you click on the button under (and see what title works best). Do it, you want to!
+<br>
 
-<p>Vestibulum quis porttitor metus. Praesent vulputate justo quis porta semper. Ut eu arcu quis dolor tincidunt mollis. Nullam rutrum leo at euismod volutpat. Ut ultrices lacus eu feugiat ultrices. Proin mattis ipsum ut varius venenatis. Fusce eu metus at lectus cursus ullamcorper. Mauris sagittis sapien et feugiat elementum.</p>
+<button>Click ME!</button>
 
-<p>Nam in lorem feugiat, accumsan nunc non, feugiat nunc. Mauris risus turpis, efficitur nec semper eget, aliquet eget nisi. Pellentesque elementum elementum metus vitae tincidunt. In arcu quam, egestas in tortor non, ornare porta justo. Mauris non est porta, tincidunt lacus non, sollicitudin nulla. Sed ut mauris euismod, lobortis lorem a, viverra quam. Suspendisse potenti. Ut commodo erat eros, sed lacinia dolor lobortis at. Aliquam elementum nulla non semper hendrerit. Interdum et malesuada fames ac ante ipsum primis in faucibus. Mauris bibendum at velit at accumsan. Mauris rutrum neque nec lectus commodo, et iaculis lacus vulputate.</p>
+<br>
+We keep track of which version you got first, so even if you reload the page, you will always have the initial version. To test for real, you need to open a new anonymous window in your browser and load that page. you have 50% chances of seeing the new version.
+
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-63148880-1', 'auto');
+    ga('send', 'pageview');
+
+</script>
+
 
 </body>
 </html>
