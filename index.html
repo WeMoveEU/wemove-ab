@@ -4,7 +4,7 @@
 <title>Test</title>
 <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
 <script type="text/javascript" src="js/alephbet.js"></script>
-<script type="text/javascript">
+<script type="text/javascript" id="script">
 jQuery(document).ready(function($) {
 
   var h1_experiment = new AlephBet.Experiment({
@@ -30,6 +30,7 @@ jQuery(document).ready(function($) {
   jQuery('button').click(function() {
     // The chosen variant will be tied to the goal automatically
     clicked_goal.complete();
+    $("pre").text($("#script").text());
   });
   
   // adding experiment to the goal
@@ -48,12 +49,15 @@ jQuery(document).ready(function($) {
 Which one are you seeing? We are checking as well if you click on the button under (and see what title works best). Do it, you want to!
 <br>
 
-<button>Click ME!</button>
+<button title="and you'll get a nice suprise">Click ME!</button>
 
 <br>
 We keep track of which version you got first, so even if you reload the page, you will always have the initial version. To test for real, you need to open a new anonymous window in your browser and load that page. you have 50% chances of seeing the new version.
 
 
+<pre>
+
+</pre>
 
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
