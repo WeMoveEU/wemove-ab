@@ -1,6 +1,6 @@
 <?php
 
-function getService()
+function getService($configFile)
 {
   // Creates and returns the Analytics service object.
 
@@ -9,9 +9,12 @@ function getService()
 
   // Use the developers console and replace the values with your
   // service account email, and relative location of your key file.
-  $service_account_email = 'EMAIL FROM PROJECT';
-  $key_file_location = 'FILE WITH P12 KEY.p12';
 
+  $configFolder = 'config';
+  $content = implode("", file($configFolder.'/'.$configFile));
+  $config = json_decode($content, true);
+  $service_account_email = $config['email-address'];
+  $key_file_location = $configFolder.'/'.$config['key-file-name'];
 
   // Create and configure a new client object.
   $client = new Google_Client();
@@ -102,7 +105,19 @@ function printResults(&$results) {
   }
 }
 
-$analytics = getService();
+
+function parseArgs($argc, $argv) {
+  if ($argc == 2) {
+    if (preg_match('/--config=([a-zA-Z0-9\-\.\_]*)/', $argv[1], $matches)) {
+      return array('config' => $matches[1]);
+    }
+  }
+  return array();
+}
+
+$config = parseArgs($argc, $argv);
+$configFile = $config['config'];
+$analytics = getService($configFile);
 $profile = getFirstProfileId($analytics);
 printResults(getResults($analytics, $profile));
 
