@@ -38,29 +38,26 @@
 <script type="text/javascript">
 jQuery(document).ready(function($) {
 
-  var custom_adapter = (function(namespace) {
-    function custom_adapter() {}
+  var custom_adapter = function(namespace) {
 
-    custom_adapter.namespace = namespace || 'alephbet';
+    this.namespace = namespace;
 
-    custom_adapter._track = function(category, action, label, value) {
+    this._track = function(category, action, label, value) {
       if (typeof ga !== 'function') {
         throw 'ga NOT defined. Please make sure your Universal analytics is set up correctly';
       }
       return ga('send', 'event', category, action, label, value);
     };
 
-    custom_adapter.experiment_start = function(experiment_name, variant) {
-      return custom_adapter._track(custom_adapter.namespace, experiment_name, variant + " | Visitors");
+    this.experiment_start = function(experiment_name, variant) {
+      return this._track(this.namespace, experiment_name, variant + " | views");
     };
 
-    custom_adapter.goal_complete = function(experiment_name, variant, event_name) {
-      return custom_adapter._track(custom_adapter.namespace, experiment_name, variant + " | " + event_name);
+    this.goal_complete = function(experiment_name, variant, event_name) {
+      return this._track(this.namespace, experiment_name, variant + " | goal | " + event_name);
     };
-
-    return custom_adapter;
-
-  });
+    
+  };
   
 
   var h1_experiment = new AlephBet.Experiment({

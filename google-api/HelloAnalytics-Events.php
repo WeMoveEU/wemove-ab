@@ -87,6 +87,7 @@ function parseConfig($configFile) {
     'filterEventCategory' => $config['filterEventCategory'],
     'filterEventAction' => $config['filterEventAction'],
     'filterEventLabel' => $config['filterEventLabel'],
+    'outputFormat' => (array_key_exists('outputFormat', $config) && $config['outputFormat']) ? $config['outputFormat'] : 'print',
   );
 }
 
@@ -126,6 +127,40 @@ function getTotalEvents(&$analytics, $profileId, $options = array()) {
 
 }
 
+function info($string) {
+  return "\033[0;32m".$string."\033[0m";
+}
+
+function error($string) {
+  return "\033[0;31mERROR: ".$string."\033[0m";
+}
+
+function prepareFilename($configFile, $outputFormat) {
+  $n = explode(".", $configFile);
+  return $n[0].'--'.date("Y-m-d_His").'.'.$outputFormat;
+}
+
+function saveCSV($filename, $contentArray, $header) {
+  $outputFolder = 'output';
+  $delimiter = ';';
+  $fp = fopen($outputFolder.'/'.$filename, 'x');
+  fputcsv($fp, $header, $delimiter);
+  foreach ($contentArray as $row) {
+    fputcsv($fp, $row, $delimiter);
+  }
+  fclose($fp);
+  return true;
+}
+
+function saveJSON($filename, $content) {
+  $outputFolder = 'output';
+  $fp = fopen($outputFolder.'/'.$filename, 'x');
+  fwrite($fp, $content);
+  fclose($fp);
+  return true;
+}
+
+
 $cliArgs = parseArgs($argc, $argv);
 $configFile = $cliArgs['config'];
 $config = parseConfig($configFile);
@@ -133,17 +168,51 @@ $analytics = getService($config['emailAddress'], $config['keyFileLocation']);
 $profile = getFirstProfileId($analytics);
 $events = getTotalEvents($analytics, $profile, $config);
 $profileName = $events->getProfileInfo()->getProfileName();
-echo "VIEW: ".$profileName."\n";
+
 $headers = array();
 foreach ($events->getColumnHeaders() as $header) {
   $headers[] = $header['name'];
 }
-echo "\n";
+
 $rows = $events->getRows();
+$rowsKeys = array();
+$i = 0;
 foreach ($rows as $k => $metrics) {
-  echo "ROW: ".$k."\n";
   foreach ($metrics as $id => $m) {
-    echo $headers[$id]." => ".$m."\n";
+    $rowsKeys[$i][$headers[$id]] = $m;
   }
-  echo "--------------------------------\n\n";
+  $i++;
+}
+
+echo info("VIEW: ".$profileName."\n");
+echo info("OUTPUT: ".$config['outputFormat']."\n");
+switch ($config['outputFormat']) {
+  case 'print':
+    foreach ($rowsKeys as $k => $metrics) {
+      echo "ROW: ".$k."\n";
+      foreach ($metrics as $key => $m) {
+        echo $key." => ".$m."\n";
+      }
+      echo "--------------------------------\n\n";
+    }
+    break;
+  
+  case 'csv':
+    $filename = prepareFilename($configFile, $config['outputFormat']);
+    if (saveCSV($filename, $rowsKeys, $headers)) {
+      echo info("Saved to file ".$filename."\n");
+    }
+    break;
+    
+  case 'json':
+    $json = json_encode($rowsKeys);
+    $filename = prepareFilename($configFile, $config['outputFormat']);
+    if (saveJSON($filename, $json)) {
+      echo info("Saved to file ".$filename."\n");
+    }
+    break;
+    
+  default:
+    echo error("Unknown output format\n");
+    break;
 }
