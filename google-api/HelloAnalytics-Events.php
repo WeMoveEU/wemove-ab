@@ -212,6 +212,34 @@ switch ($config['outputFormat']) {
     }
     break;
     
+  case 'abba':
+    $rowsABBA = array();
+    foreach ($rowsKeys as $k => $row) {
+      $tab = explode(' | ', $row['ga:eventLabel']);
+      /** variant */
+      $abba_label = $tab[0];
+      /** views | goals */
+      $action_type = $tab[1];
+      switch ($action_type) {
+        case 'views':
+          $rowsABBA[$abba_label]['number_of_trials'] = $row['ga:totalEvents'];
+          break;
+        
+        case 'goal':
+          $rowsABBA[$abba_label]['numer_of_successes'] = $row['ga:totalEvents'];          
+          break;
+        
+        default:
+          break;
+      }
+    }
+    $json = json_encode($rowsABBA);
+    $filename = prepareFilename($configFile, $config['outputFormat']);
+    if (saveJSON($filename, $json)) {
+      echo info("Saved to file ".$filename."\n");
+    }
+    break;
+    
   default:
     echo error("Unknown output format\n");
     break;
