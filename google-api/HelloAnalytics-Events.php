@@ -79,7 +79,7 @@ function parseConfig($configFile) {
   $configFolder = 'config';
   $content = implode("", file($configFolder.'/'.$configFile));
   $config = json_decode($content, true);
-  return array(
+  $result = array(
     'emailAddress' => $config['emailAddress'],
     'keyFileLocation' => $configFolder.'/'.$config['keyFileName'],
     'startDate' => $config['startDate'],
@@ -89,6 +89,11 @@ function parseConfig($configFile) {
     'filterEventLabel' => $config['filterEventLabel'],
     'outputFormat' => (array_key_exists('outputFormat', $config) && $config['outputFormat']) ? $config['outputFormat'] : 'print',
   );
+  if ($result['outputFormat'] == 'abba') {
+    $result['intervalConfidenceLevel'] = (array_key_exists('intervalConfidenceLevel', $config) && $config['intervalConfidenceLevel']) ? $config['intervalConfidenceLevel'] : 0.95;
+    $result['multipleTestingCorrection'] = (array_key_exists('multipleTestingCorrection', $config) && is_bool($config['multipleTestingCorrection'])) ? $config['multipleTestingCorrection'] : true;
+  }
+  return $result;
 }
 
 function getTotalEvents(&$analytics, $profileId, $options = array()) {
@@ -104,7 +109,10 @@ function getTotalEvents(&$analytics, $profileId, $options = array()) {
     $endDate = 'yesterday';
   }
   $metrics = 'ga:totalEvents,ga:uniqueEvents,ga:eventValue,ga:avgEventValue,ga:sessionsWithEvent,ga:eventsPerSessionWithEvent';
-  $params = array('dimensions' => 'ga:eventCategory,ga:eventAction,ga:eventLabel');
+  $params = array(
+    'dimensions' => 'ga:eventCategory,ga:eventAction,ga:eventLabel',
+    'sort' => 'ga:eventLabel'
+  );
   $filters = array();
   if ($options['filterEventCategory']) {
     $filters[] = 'ga:eventCategory'.$options['filterEventCategory'];
@@ -168,6 +176,8 @@ $analytics = getService($config['emailAddress'], $config['keyFileLocation']);
 $profile = getFirstProfileId($analytics);
 $events = getTotalEvents($analytics, $profile, $config);
 $profileName = $events->getProfileInfo()->getProfileName();
+echo info("VIEW: ".$profileName."\n");
+echo info("OUTPUT: ".$config['outputFormat']."\n");
 
 $headers = array();
 foreach ($events->getColumnHeaders() as $header) {
@@ -175,6 +185,12 @@ foreach ($events->getColumnHeaders() as $header) {
 }
 
 $rows = $events->getRows();
+
+if (!count($rows)) {
+  echo error("No data found\n");
+  exit;
+}
+
 $rowsKeys = array();
 $i = 0;
 foreach ($rows as $k => $metrics) {
@@ -184,8 +200,6 @@ foreach ($rows as $k => $metrics) {
   $i++;
 }
 
-echo info("VIEW: ".$profileName."\n");
-echo info("OUTPUT: ".$config['outputFormat']."\n");
 switch ($config['outputFormat']) {
   case 'print':
     foreach ($rowsKeys as $k => $metrics) {
@@ -226,14 +240,21 @@ switch ($config['outputFormat']) {
           break;
         
         case 'goal':
-          $rowsABBA[$abba_label]['numer_of_successes'] = $row['ga:totalEvents'];          
+          $rowsABBA[$abba_label]['number_of_successes'] = $row['ga:totalEvents'];          
           break;
         
         default:
           break;
       }
     }
-    $json = json_encode($rowsABBA);
+    $abba = array(
+      'config' => array(
+        'intervalConfidenceLevel' => $config['intervalConfidenceLevel'],
+        'multipleTestingCorrection' => $config['multipleTestingCorrection'],
+      ),
+    );
+    $abba['data'] = $rowsABBA;
+    $json = json_encode($abba);
     $filename = prepareFilename($configFile, $config['outputFormat']);
     if (saveJSON($filename, $json)) {
       echo info("Saved to file ".$filename."\n");
