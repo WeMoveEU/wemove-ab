@@ -219,7 +219,57 @@ switch ($config['outputFormat']) {
     break;
     
   case 'json':
-    $json = json_encode($rowsKeys);
+    $categories = array();
+    $experiments = array();
+    $variants = array();
+    $goals = array();
+    foreach ($rowsKeys as $k => $row) {
+      $categories[$row['ga:eventCategory']] = $row['ga:eventCategory'];
+      $experiments[$row['ga:eventCategory']][$row['ga:eventAction']] = $row['ga:eventAction'];
+      $tab = explode(' | ', $row['ga:eventLabel']);
+      /** variant */
+      $abba_label = $tab[0];
+      /** views | goals */
+      $action_type = $tab[1];
+      switch ($action_type) {
+        case 'views':
+          $variants[$row['ga:eventCategory']][$row['ga:eventAction']][$abba_label] = $row['ga:totalEvents'];
+          break;
+        
+        case 'goal':
+          $goals[$row['ga:eventCategory']][$row['ga:eventAction']][$tab[2]][$abba_label] = $row['ga:totalEvents'];
+          break;
+        
+        default:
+          break;
+      }
+    }
+
+    $rowsJSON = array();
+    $ic = 0;
+    foreach ($categories as $c) {
+      $rowsJSON[$ic] = array('category' => $c);
+      $ie = 0;
+      if (array_key_exists($c, $experiments)) {
+        foreach ($experiments[$c] as $e) {
+          $rowsJSON[$ic]['experiments'][$ie] = array('name' => $e);
+          if (array_key_exists($c, $variants) && array_key_exists($e, $variants[$c])) {
+            foreach ($variants[$c][$e] as $v => $vm) {
+              $rowsJSON[$ic]['experiments'][$ie]['variants'][$v] = $vm;
+            }            
+          }
+          if (array_key_exists($c, $goals) && array_key_exists($e, $goals[$c])) {
+            foreach ($goals[$c][$e] as $g => $gm) {
+              $rowsJSON[$ic]['experiments'][$ie]['goals'][$g] = $gm;
+            }
+          }
+          $ie++;
+        }  
+      }
+      $ic++;
+    }
+
+    $json = json_encode($rowsJSON);
     $filename = prepareFilename($configFile, $config['outputFormat']);
     if (saveJSON($filename, $json)) {
       echo info("Saved to file ".$filename."\n");
