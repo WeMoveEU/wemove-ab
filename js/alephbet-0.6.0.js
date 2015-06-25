@@ -162,7 +162,8 @@ AlephBet = (function() {
     }
 
     Experiment.prototype.run = function() {
-      log("running with options: " + (JSON.stringify(this.options)));
+      //log("running with options: " + (JSON.stringify(this.options)));
+      log("running with options: ");
       _force_variant();
       return this.apply_variant();
     };
